@@ -16,3 +16,4 @@ if not cam.isOpened():
 
 print("Camera is active!")
 
+#Hellodwdwdwdwd
