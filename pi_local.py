@@ -21,3 +21,41 @@ if not cam.isOpened():
 
 print("Camera is active!")
 
+try:
+    while True:
+        ret, frame = cam.read()
+        if not ret:
+            print("Failed Frame Grab")
+            break
+        
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        faces = face_cas.detectMultiScale(gray, 1.3, 5)
+
+        for(x, y, w, h) in faces:
+            cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
+
+        encode_success, buffer = cv2.imencode('.jpg', frame)
+        if not encode_success:
+            continue
+
+        data = buffer.tobytes()
+        data_len = len(data)
+
+        s.sendall(struct.pack('>I', data_len))
+        s.sendall(data)
+
+        cv2.imshow("Local Camera", frame)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+        time.sleep(0.02)
+
+except KeyboardInterrupt:
+    print("Stopped manually")
+
+finally:
+    cam.release()
+    s.close
+    cv2.destroyAllWindows()
+    print("All interfaces clear.")
+    
