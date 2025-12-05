@@ -3,15 +3,22 @@ import cv2
 import socket
 import struct
 
-host_ip = '192.168.1.183' #Ip address of remote server
-host_socket = 5000 #Socket of server
+host_ip = '10.104.9.104' #Ip address of remote server
+host_socket = 42069 #Socket of server
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.connect((host_ip, host_socket))
 
-face_cas = cv2.CascadeClassifier(
-    cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
-)
+#face_cas = cv2.CascadeClassifier(
+ #   cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
+#)
+
+# Source - https://stackoverflow.com/a
+# Posted by alecxe
+# Retrieved 2025-12-04, License - CC BY-SA 4.0
+
+face_cas = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+
 
 cam = cv2.VideoCapture(0)
 
