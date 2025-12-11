@@ -3,7 +3,7 @@ import struct
 import cv2
 import numpy as np
 
-HOST = "10.104.9.104"   # Listen on all network interfaces
+HOST = "10.104.8.170"   # Listen on all network interfaces
 PORT = 42069        # Match your Pi script
 
 # ------------------------------

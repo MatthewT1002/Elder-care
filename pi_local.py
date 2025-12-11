@@ -3,7 +3,7 @@ import cv2
 import socket
 import struct
 
-host_ip = '10.104.9.104' #Ip address of remote server
+host_ip = '10.104.8.170' #Ip address of remote server
 host_socket = 42069 #Socket of server
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
