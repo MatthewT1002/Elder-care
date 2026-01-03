@@ -14,8 +14,10 @@ recogniser = cv2.face.LBPHFaceRecognizer_create()
 recogniser.read("trainer.yml")
 
 label_map = {
-    0: "Matthew_T"
-    
+    0: "Matthew_T",
+    1: "Matthew_R",
+    2: "Harry",
+    3: "Arpitha"
 }
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

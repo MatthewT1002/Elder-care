@@ -60,9 +60,13 @@ try:
 
             # Label mapping (must match server)
             if label == 0:
-                name = "Matthew"
+                name = "Matthew_T"
             elif label == 1:
-                name = "yes"
+                name = "Matthew_R"
+            elif label == 2:
+                name = "Harry"
+            elif label == 3:
+                name = "Arpitha"                
             else:
                 name = "Unknown"
 
