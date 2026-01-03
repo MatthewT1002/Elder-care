@@ -14,9 +14,9 @@ recogniser = cv2.face.LBPHFaceRecognizer_create()
 recogniser.read("trainer.yml")
 
 label_map = {
-    0: "Matthew_T",
+    0: "Harry",
     1: "Matthew_R",
-    2: "Harry",
+    2: "Matthew_T",
     3: "Arpitha"
 }
 
