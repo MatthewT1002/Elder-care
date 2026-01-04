@@ -8,29 +8,26 @@ from gpiozero import Device
 import cv2
 import numpy as np
 
-Device.pin_factory = RPiGPIOFactory()  
-RELAY_PIN = 17 #GPIO pin used
-OPEN_TIME = 3 #Seconds door unlocked
-COOLDOWN = 5 #Seconds between unlocks
+Device.pin_factory = RPiGPIOFactory()
+RELAY_PIN = 17
+OPEN_TIME = 3
+COOLDOWN = 5
 
 relay = OutputDevice(RELAY_PIN, active_high=True, initial_value=False)
 last_open = 0
 
-SERVER_IP = "192.168.1.207" #Server IP
-SERVER_PORT = 42069 #Server port (May need changed depending on network)
+SERVER_IP = "192.168.1.207"
+SERVER_PORT = 42069
 
-ALLOWED_USERS = ["Matthew_T"] #User that door will unlock for
-CONFIDENCE_THRESHOLD = 60  #Change if needed
+ALLOWED_USERS = ["Matthew_T"]
+CONFIDENCE_THRESHOLD = 45  # Must match server
 
-cam = cv2.VideoCapture(0) #Camera Setup stuff
+cam = cv2.VideoCapture(0)
 if not cam.isOpened():
-    print("Cannot access")
+    print("Cannot access camera")
     exit()
 
-print("Camera active!")
-
-
-sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM) #Server Script
+sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 try:
     sock.connect((SERVER_IP, SERVER_PORT))
     print(f"Connected to server at {SERVER_IP}:{SERVER_PORT}")
@@ -38,6 +35,8 @@ except Exception as e:
     print("Cannot connect to server:", e)
     cam.release()
     exit()
+
+label_map = {0: "Harry", 1: "Matthew_R", 2: "Matthew_T", 3: "Arpitha"}
 
 try:
     while True:
@@ -53,23 +52,25 @@ try:
         sock.sendall(struct.pack(">I", len(data)))
         sock.sendall(data)
 
-        face_count_bytes = sock.recv(4) #Receive number of faces
+        face_count_bytes = sock.recv(4)
         if not face_count_bytes:
             continue
-
         face_count = struct.unpack(">I", face_count_bytes)[0]
 
-        for _ in range(face_count):  #Receive recognition results
+        for _ in range(face_count):
             result_bytes = sock.recv(24)
             if not result_bytes:
                 continue
 
-            x, y, w, h, label, confidence = struct.unpack(">6I", result_bytes)
-            label_map = {0: "Harry", 1: "Matthew_R", 2: "Matthew_T", 3: "Arpitha"}  # Must match trainer.yml
-            name = label_map.get(label, "Unknown")
-            #TODO: Could pull list automatically from .yml file if time
+            x, y, w, h, label, confidence = struct.unpack(">4I2i", result_bytes)
 
-            cv2.putText( #Draw Lable for testing stuff
+            # Unknown face check
+            if label == -1:
+                name = "UNKNOWN"
+            else:
+                name = label_map.get(label, "UNKNOWN")
+
+            cv2.putText(
                 frame,
                 f"{name} ({confidence})",
                 (x, max(20, y-10)),
@@ -79,7 +80,8 @@ try:
                 2
             )
 
-            if name in ALLOWED_USERS and confidence <= CONFIDENCE_THRESHOLD: #Relay Logic
+            # Unlock logic
+            if label != -1 and name in ALLOWED_USERS and confidence <= CONFIDENCE_THRESHOLD:
                 now = time.time()
                 if now - last_open > COOLDOWN:
                     print(f"Unlocking for {name} (confidence {confidence})")
@@ -88,7 +90,7 @@ try:
                     relay.off()
                     last_open = now
 
-        cv2.imshow("Camera Feed", frame) #Show camera (Not needed if using web UI TODO: Web UI intergration)
+        cv2.imshow("Camera Feed", frame)
         if cv2.waitKey(1) & 0xFF == ord("q"):
             break
 

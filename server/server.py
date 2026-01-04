@@ -3,22 +3,19 @@ import struct
 import cv2
 import numpy as np
 
-HOST = "192.168.1.207" #Server IP
-PORT = 42069 #Server Port
+HOST = "192.168.1.207"
+PORT = 42069
 
-face_cas = cv2.CascadeClassifier(
+face_cascade = cv2.CascadeClassifier(
     cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
 )
 
 recogniser = cv2.face.LBPHFaceRecognizer_create()
 recogniser.read("trainer.yml")
 
-label_map = {
-    0: "Harry",
-    1: "Matthew_R",
-    2: "Matthew_T",
-    3: "Arpitha"
-}
+label_map = {0: "Harry", 1: "Matthew_R", 2: "Matthew_T", 3: "Arpitha"}
+
+CONFIDENCE_THRESHOLD = 60  # Match client threshold
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.bind((HOST, PORT))
@@ -30,12 +27,13 @@ print("Connected:", addr)
 
 try:
     while True:
+        # Receive frame size header
         header = conn.recv(4)
         if not header:
             break
-
         frame_len = struct.unpack(">I", header)[0]
 
+        # Receive frame data
         data = b""
         while len(data) < frame_len:
             packet = conn.recv(frame_len - len(data))
@@ -43,14 +41,12 @@ try:
                 break
             data += packet
 
-        frame = cv2.imdecode(
-            np.frombuffer(data, np.uint8), cv2.IMREAD_COLOR
-        )
+        frame = cv2.imdecode(np.frombuffer(data, np.uint8), cv2.IMREAD_COLOR)
         if frame is None:
             continue
 
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        faces = face_cas.detectMultiScale(gray, 1.3, 5)
+        faces = face_cascade.detectMultiScale(gray, 1.3, 5)
 
         response = []
 
@@ -59,15 +55,25 @@ try:
             face = cv2.resize(face, (200, 200))
 
             label, confidence = recogniser.predict(face)
-            name = label_map.get(label, "Unknown")
 
-            response.append((x, y, w, h, label, int(confidence)))
+            # Unknown face handling
+            if confidence > CONFIDENCE_THRESHOLD:
+                label = -1
 
-        # Send back number of faces
-        conn.sendall(struct.pack(">I", len(response)))
+            confidence = int(min(max(confidence, -2**31), 2**31-1))
 
-        for item in response:
-            conn.sendall(struct.pack(">6I", *item))
+            response.append((x, y, w, h, label, confidence))
+
+        # Send number of faces
+        try:
+            conn.sendall(struct.pack(">I", len(response)))
+            # Send each face info
+            for item in response:
+                x, y, w, h, label, confidence = item
+                conn.sendall(struct.pack(">4I2i", x, y, w, h, label, confidence))
+        except BrokenPipeError:
+            print("[WARN] Client disconnected.")
+            break
 
 except KeyboardInterrupt:
     print("Server stopped")
@@ -75,4 +81,6 @@ except KeyboardInterrupt:
 finally:
     conn.close()
     server.close()
+    print("Server closed")
+
     print("Server closed")

@@ -30,14 +30,21 @@ for person_name in os.listdir(dataset_path):
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         detected_faces = face_cascade.detectMultiScale(gray, 1.3, 5)
 
-        for (x, y, w, h) in detected_faces:
-            faces.append(gray[y:y+h, x:x+w])
-            labels.append(current_label)
+        if len(detected_faces) != 1:
+            continue
+
+        (x, y, w, h) = detected_faces[0]
+
+        face = gray[y:y+h, x:x+w]
+        face = cv2.resize(face, (200, 200))
+
+        faces.append(face)
+        labels.append(current_label)
 
     current_label += 1
 
-faces = np.array(faces, dtype=object)
-labels = np.array(labels)
+faces = [np.array(f, dtype=np.uint8) for f in faces]
+labels = np.array(labels, dtype=np.int32)
 
 recognizer = cv2.face.LBPHFaceRecognizer_create()
 recognizer.train(faces, labels)
