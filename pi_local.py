@@ -16,11 +16,11 @@ COOLDOWN = 5
 relay = OutputDevice(RELAY_PIN, active_high=True, initial_value=False)
 last_open = 0
 
-SERVER_IP = "192.168.1.207"
+SERVER_IP = "172.22.250.112"
 SERVER_PORT = 42069
 
 ALLOWED_USERS = ["Matthew_T"]
-CONFIDENCE_THRESHOLD = 45  # Must match server
+CONFIDENCE_THRESHOLD = 60  # Must match server
 
 cam = cv2.VideoCapture(0)
 if not cam.isOpened():
@@ -36,7 +36,7 @@ except Exception as e:
     cam.release()
     exit()
 
-label_map = {0: "Harry", 1: "Matthew_R", 2: "Matthew_T", 3: "Arpitha"}
+label_map = {0: "Harry", 1: "Matthew_R", 2: "Matthew_T", 3: "Arpitha"} # Change when trainer is run
 
 try:
     while True:
