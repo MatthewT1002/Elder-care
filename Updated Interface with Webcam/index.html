@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Smart Care Monitoring Dashboard</title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+
+<header>
+  <h1>Smart Care System – Assisted Living</h1>
+  <p>Camera, Door Access & Emergency Monitoring</p>
+  <button id="toggleTheme">Dark Mode</button>
+</header>
+
+<section class="dashboard">
+
+  <!-- Camera Feed -->
+  <div class="card">
+    <h3><i class="fa-solid fa-video"></i> Camera Feed</h3>
+    <div class="camera-container">
+      <video id="cameraFeed" width="100%" height="200" autoplay></video>
+        <script>
+            const webcamVideo = document.getElementById("cameraFeed");
+
+            navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
+                webcamVideo.srcObject = stream;
+            }).catch((error) => {console.error(error) })
+        </script>
+      <div id="cameraStatus" class="camera-status online">Online</div>
+    </div>
+  </div>
+
+  <!-- Door Access -->
+  <div class="card">
+    <h3><i class="fa-solid fa-door-closed"></i> Door Access</h3>
+    <p id="doorState" class="status-normal">Locked</p>
+  </div>
+
+  <!-- Emergency Alert -->
+  <div class="card alert">
+    <h3><i class="fa-solid fa-triangle-exclamation"></i> Emergency Alert</h3>
+    <p id="alert">No active alerts</p>
+  </div>
+
+</section>
+
+<footer>
+  Smart Care Dashboard • Assisted Living Monitoring
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>
