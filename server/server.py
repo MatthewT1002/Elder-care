@@ -3,7 +3,7 @@ import struct
 import cv2
 import numpy as np
 
-HOST = "192.168.1.207"
+HOST = "192.168.20.78"
 PORT = 42069
 
 face_cascade = cv2.CascadeClassifier(
