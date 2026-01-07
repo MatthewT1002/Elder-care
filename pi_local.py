@@ -12,6 +12,39 @@ import threading
 import cv2
 import numpy as np
 
+app = Flask(__name__)
+
+def generate_frames():
+    global output_frame
+    while True:
+        with frame_lock:
+            if output_frame is None:
+                continue
+            ret, buffer = cv2.imencode(".jpg", output_frame)
+        if not ret:
+            continue
+
+        frame_bytes = buffer.tobytes()
+        yield (
+            b"--frame\r\n"
+            b"Content-Type: image/jpeg\r\n\r\n" +
+            frame_bytes +
+            b"\r\n"
+        )
+        time.sleep(0.03)
+
+@app.route("/video_feed")
+def video_feed():
+    return Response(
+        generate_frames(),
+        mimetype="multipart/x-mixed-replace; boundary=frame"
+    )
+
+def start_flask():
+    app.run(host="0.0.0.0", port=5000, threaded=True)
+
+threading.Thread(target=start_flask, daemon=True).start()
+
 Device.pin_factory = RPiGPIOFactory()
 RELAY_PIN = 17
 OPEN_TIME = 3
@@ -25,6 +58,9 @@ SERVER_PORT = 42069
 
 ALLOWED_USERS = ["Matthew_T"]
 CONFIDENCE_THRESHOLD = 60  # Must match server
+
+output_frame = None
+frame_lock = threading.Lock()
 
 cam = cv2.VideoCapture(0)
 if not cam.isOpened():
@@ -83,6 +119,9 @@ try:
                 (0, 255, 0),
                 2
             )
+
+            with frame_lock:
+                output_frame = frame.copy()
 
             # Unlock logic
             if label != -1 and name in ALLOWED_USERS and confidence <= CONFIDENCE_THRESHOLD:
